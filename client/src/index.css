@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-aqi-good: #009966;
+    --color-aqi-satisfactory: #58BE2D;
+    --color-aqi-moderate: #FFDD44;
+    --color-aqi-poor: #FF6633;
+    --color-aqi-very-poor: #CC0033;
+    --color-aqi-severe: #660000;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Accessible reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* High contrast visible focus */
+  :focus-visible {
+    outline: 2px solid #16a34a;
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Skip link for screen readers & keyboard nav */
+  .skip-to-content {
+    @apply sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50;
+    @apply bg-brand-800 text-white px-4 py-2 rounded-lg font-medium shadow-lg;
+  }
+}

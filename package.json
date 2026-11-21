@@ -1,0 +1,41 @@
+{
+  "name": "airwise",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AIRWISE — Personalized Urban Air Quality Intelligence and Daily Action Assistant",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "npm run dev -w server",
+    "dev:client": "npm run dev -w client",
+    "build": "npm run build -w server && npm run build -w client",
+    "build:client": "npm run build -w client",
+    "build:server": "npm run build -w server",
+    "test": "npm run test -w server && npm run test -w client",
+    "test:client": "npm run test -w client",
+    "test:server": "npm run test -w server",
+    "test:unit": "npm run test:unit -w server",
+    "test:integration": "npm run test:integration -w server",
+    "lint": "npm run lint -w client && npm run lint -w server",
+    "typecheck": "npm run typecheck -w client && npm run typecheck -w server",
+    "preview": "npm run build && npm run start -w server"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "air-quality",
+    "aqi",
+    "india",
+    "sustainability",
+    "gemini",
+    "genai"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^10.0.7"
+  }
+}

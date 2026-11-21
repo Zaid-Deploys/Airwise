@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+dist/
+build/
+client/dist/
+server/dist/
+
+# Environment & Deployments
+.env
+.env.*
+!.env.example
+.vercel/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Build artifacts
+*.tsbuildinfo
+
+# Test coverage
+coverage/
+
+# Cache
+.cache/
+.turbo/
