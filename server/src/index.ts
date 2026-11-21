@@ -175,8 +175,8 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
   });
 });
 
-// Start server if not imported as module
-if (env.NODE_ENV !== 'test') {
+// Start server for local/container execution, but skip when in test environment or Vercel serverless runtime
+if (env.NODE_ENV !== 'test' && !env.IS_VERCEL) {
   app.listen(PORT, () => {
     console.log(`\n🌬️  AIRWISE Server running on port ${PORT}`);
     console.log(`   Client origin: ${CLIENT_ORIGIN}`);

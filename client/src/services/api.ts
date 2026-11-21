@@ -30,9 +30,24 @@ async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
       },
     });
 
-    const json: ApiResponse<T> = await res.json();
+    const contentType = res.headers.get('content-type') || '';
+    let json: ApiResponse<T>;
 
-    if (!res.ok || !json.success) {
+    if (!res.ok) {
+      if (contentType.includes('application/json')) {
+        json = (await res.json().catch(() => null)) as ApiResponse<T>;
+        throw new Error(json?.error?.message || `Server error (${res.status})`);
+      }
+      throw new Error(`Server error (${res.status}). Service temporarily unavailable.`);
+    }
+
+    try {
+      json = await res.json();
+    } catch {
+      throw new Error('Invalid response received from server.');
+    }
+
+    if (!json.success) {
       throw new Error(json.error?.message || `Request failed with status ${res.status}`);
     }
 

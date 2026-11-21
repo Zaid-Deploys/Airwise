@@ -2,6 +2,7 @@
   "name": "airwise",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "AIRWISE — Personalized Urban Air Quality Intelligence and Daily Action Assistant",
   "workspaces": [
     "client",
