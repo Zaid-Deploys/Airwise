@@ -3,6 +3,7 @@ import {
   generateDailyPlan,
   generateIndoorRecommendations,
   generateSustainableAlternatives,
+  makeIdGenerator,
 } from '../../src/engine/recommendation-engine.js';
 import type { AirQualityData, UserPreferences, TimeOfDay } from '../../src/types/index.js';
 
@@ -324,6 +325,53 @@ describe('Deterministic Recommendation Engine', () => {
         expect(alt.emissionImpact).toBeDefined();
         expect(alt.exposureImpact.length).toBeGreaterThan(10);
         expect(alt.emissionImpact.length).toBeGreaterThan(10);
+      }
+    });
+  });
+
+  describe('Phase 6: Recommendation ID Generation & Uniqueness Invariants', () => {
+    it('generates unique IDs across repeated calls within one generator instance', () => {
+      const createId = makeIdGenerator();
+      const ids = new Set<string>();
+      for (let i = 0; i < 50; i++) {
+        ids.add(createId('rec-test'));
+      }
+      expect(ids.size).toBe(50);
+    });
+
+    it('generates unique IDs across separate generator instances created in the same tick', () => {
+      const gen1 = makeIdGenerator();
+      const gen2 = makeIdGenerator();
+      const id1 = gen1('rec-test');
+      const id2 = gen2('rec-test');
+      expect(id1).not.toBe(id2);
+    });
+
+    it('preserves prefix and expected structure in generated IDs', () => {
+      const createId = makeIdGenerator();
+      const id = createId('rec-custom');
+      expect(id.startsWith('rec-custom-')).toBe(true);
+      const parts = id.split('-');
+      // Format: prefix... - timestamp - seed - counter
+      expect(parts.length).toBeGreaterThanOrEqual(4);
+    });
+
+    it('ensures separate calls to generateDailyPlan in the same millisecond produce distinct recommendation IDs', () => {
+      const plan1 = generateDailyPlan(mockGoodAqData, defaultPreferences);
+      const plan2 = generateDailyPlan(mockGoodAqData, defaultPreferences);
+
+      const plan1Ids = new Set(
+        [...plan1.morning, ...plan1.afternoon, ...plan1.evening, ...plan1.night].map(r => r.id)
+      );
+      const plan2Recs = [...plan2.morning, ...plan2.afternoon, ...plan2.evening, ...plan2.night];
+
+      // Verify all IDs within plan1 are unique
+      const totalRecs = plan1.morning.length + plan1.afternoon.length + plan1.evening.length + plan1.night.length;
+      expect(plan1Ids.size).toBe(totalRecs);
+
+      // Verify no ID collision between plan1 and plan2
+      for (const rec of plan2Recs) {
+        expect(plan1Ids.has(rec.id)).toBe(false);
       }
     });
   });

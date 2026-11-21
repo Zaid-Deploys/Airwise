@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { usePreferences } from '../store/preferences.js';
 import { api } from '../services/api.js';
 import type { IndoorRecommendation, RoomType } from '../types/index.js';
@@ -22,7 +22,7 @@ export const IndoorAirGuidePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedRoom, setSelectedRoom] = useState<RoomType | 'all'>('all');
 
-  const fetchIndoor = async () => {
+  const fetchIndoor = useCallback(async () => {
     if (!preferences) return;
     setLoading(true);
     setError(null);
@@ -36,11 +36,11 @@ export const IndoorAirGuidePage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [preferences]);
 
   useEffect(() => {
     fetchIndoor();
-  }, [preferences?.location?.city]);
+  }, [fetchIndoor]);
 
   if (!preferences) {
     return (
@@ -119,7 +119,7 @@ export const IndoorAirGuidePage: React.FC = () => {
           return (
             <button
               key={tab.id}
-              onClick={() => setSelectedRoom(tab.id as any)}
+              onClick={() => setSelectedRoom(tab.id as typeof selectedRoom)}
               className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
                 isSelected
                   ? 'bg-brand-700 text-white shadow-sm'

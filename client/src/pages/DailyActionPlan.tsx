@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { usePreferences } from '../store/preferences.js';
 import { api } from '../services/api.js';
 import type { DailyActionPlan, Recommendation, TimeOfDay } from '../types/index.js';
@@ -28,7 +28,7 @@ export const DailyActionPlanPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'all' | TimeOfDay>('all');
   const [completedMap, setCompletedMap] = useState<Record<string, boolean>>({});
 
-  const fetchPlan = async (isManual = false) => {
+  const fetchPlan = useCallback(async (isManual = false) => {
     if (!preferences) return;
     if (isManual) setRefreshing(true);
     else setLoading(true);
@@ -44,11 +44,11 @@ export const DailyActionPlanPage: React.FC = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [preferences]);
 
   useEffect(() => {
     fetchPlan();
-  }, [preferences?.location?.city]);
+  }, [fetchPlan]);
 
   const handleToggleComplete = (id: string, isCompleted: boolean) => {
     setCompletedMap(prev => ({ ...prev, [id]: isCompleted }));
@@ -204,7 +204,7 @@ export const DailyActionPlanPage: React.FC = () => {
         ].map(tab => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
+            onClick={() => setActiveTab(tab.id as typeof activeTab)}
             className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
               activeTab === tab.id
                 ? 'bg-brand-700 text-white shadow-sm'

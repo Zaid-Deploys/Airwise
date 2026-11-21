@@ -103,7 +103,8 @@ function findCurrentHourIndex(times: string[], timezoneOffset: number): number {
   const currentHour = localNow.toISOString().slice(0, 13); // "YYYY-MM-DDTHH"
 
   for (let i = 0; i < times.length; i++) {
-    if (times[i]!.startsWith(currentHour)) {
+    const timeEntry = times[i];
+    if (timeEntry && timeEntry.startsWith(currentHour)) {
       return i;
     }
   }
@@ -246,8 +247,9 @@ export async function fetchAirQuality(
       forecastCategory = hourResult.category;
     }
 
+    const hourTime = raw.hourly.time[i] ?? '';
     hourlyForecast.push({
-      time: raw.hourly.time[i]!,
+      time: hourTime,
       pm25: pm25Val,
       pm10: pm10Val,
       aqi: forecastAqi,

@@ -28,7 +28,7 @@ export const AqiDisplay: React.FC<AqiDisplayProps> = ({
     Severe: { bg: 'from-red-600/20 to-red-600/5', text: 'text-red-900', border: 'border-red-500', ring: 'ring-red-600/40' },
   };
 
-  const theme = themeColors[category] || themeColors.Moderate!;
+  const theme = themeColors[category] ?? themeColors.Moderate;
 
   // Format observation time
   const formattedObsTime = new Date(metadata.observationTime).toLocaleTimeString([], {

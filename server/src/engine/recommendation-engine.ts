@@ -27,10 +27,23 @@ import type {
   TimeOfDay,
 } from '../types/index.js';
 
-let recCounter = 0;
-function createId(prefix: string): string {
-  recCounter += 1;
-  return `${prefix}-${Date.now().toString(36)}-${recCounter}`;
+/**
+ * Factory that returns a scoped ID generator.
+ * Combines prefix, base-36 timestamp, a pseudo-random instance seed,
+ * and a per-instance sequential counter.
+ *
+ * This guarantees:
+ * 1. Monotonic ordering and strict uniqueness within a single generator instance (via counter).
+ * 2. Practical collision resistance across concurrent or back-to-back requests
+ *    occurring in the same millisecond within warm serverless instances (via instance seed).
+ */
+export function makeIdGenerator(): (prefix: string) => string {
+  let counter = 0;
+  const instanceSeed = Math.random().toString(36).slice(2, 8).padEnd(6, '0');
+  return (prefix: string): string => {
+    counter += 1;
+    return `${prefix}-${Date.now().toString(36)}-${instanceSeed}-${counter}`;
+  };
 }
 
 /**
@@ -40,6 +53,7 @@ export function generateDailyPlan(
   aqData: AirQualityData,
   preferences: UserPreferences
 ): DailyActionPlan {
+  const createId = makeIdGenerator();
   const { aqi, category } = aqData;
   const isSevere = category === 'Severe';
   const isVeryPoor = category === 'Very Poor';
@@ -1090,7 +1104,7 @@ export function generateDailyPlan(
   }
 
   return {
-    date: new Date().toISOString().split('T')[0]!,
+    date: new Date().toISOString().slice(0, 10),
     location: preferences.location.city,
     currentAqi: aqi,
     aqiCategory: category,
@@ -1114,6 +1128,7 @@ export function generateIndoorRecommendations(
   preferences: UserPreferences,
   room?: RoomType
 ): IndoorRecommendation[] {
+  const createId = makeIdGenerator();
   const { aqi, category } = aqData;
   const isHighPollution = category === 'Poor' || category === 'Very Poor' || category === 'Severe';
 
@@ -1329,6 +1344,7 @@ export function generateSustainableAlternatives(
   aqData: AirQualityData,
   preferences: UserPreferences
 ): SustainableAlternative[] {
+  const createId = makeIdGenerator();
   const { category } = aqData;
   const isHighPollution = category === 'Poor' || category === 'Very Poor' || category === 'Severe';
   const commute = preferences.lifestyle.commuteMode;

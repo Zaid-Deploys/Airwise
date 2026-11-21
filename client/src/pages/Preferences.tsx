@@ -14,27 +14,16 @@ import {
   Check,
   LocateFixed,
 } from 'lucide-react';
+import { INDIAN_CITIES } from '../data/indian-cities.js';
 
-const CITIES = [
-  { city: 'New Delhi', lat: 28.6139, lon: 77.2090 },
-  { city: 'Noida', lat: 28.5355, lon: 77.3910 },
-  { city: 'Gurugram', lat: 28.4595, lon: 77.0266 },
-  { city: 'Faridabad', lat: 28.4089, lon: 77.3178 },
-  { city: 'Mumbai', lat: 19.0760, lon: 72.8777 },
-  { city: 'Pune', lat: 18.5204, lon: 73.8567 },
-  { city: 'Kolkata', lat: 22.5726, lon: 88.3639 },
-  { city: 'Bengaluru', lat: 12.9716, lon: 77.5946 },
-  { city: 'Hyderabad', lat: 17.3850, lon: 78.4867 },
-  { city: 'Chennai', lat: 13.0827, lon: 80.2707 },
-  { city: 'Ahmedabad', lat: 23.0225, lon: 72.5714 },
-  { city: 'Jaipur', lat: 26.9124, lon: 75.7873 },
-  { city: 'Lucknow', lat: 26.8467, lon: 80.9462 },
-  { city: 'Kanpur', lat: 26.4499, lon: 80.3319 },
-  { city: 'Varanasi', lat: 25.3176, lon: 82.9739 },
-  { city: 'Patna', lat: 25.5941, lon: 85.1376 },
-  { city: 'Chandigarh', lat: 30.7333, lon: 76.7794 },
-  { city: 'Indore', lat: 22.7196, lon: 75.8577 },
-];
+/**
+ * The Preferences page originally displayed 18 cities (Onboarding displayed 20).
+ * To preserve the original UI options during this refactor, we filter the shared
+ * directory to its original subset. The two excluded cities (Bhopal, Nagpur) are
+ * available in Onboarding's city selection step.
+ */
+const PREFERENCES_EXCLUDED_CITIES = new Set(['Bhopal', 'Nagpur']);
+const PREFERENCES_CITIES = INDIAN_CITIES.filter(c => !PREFERENCES_EXCLUDED_CITIES.has(c.city));
 
 export const PreferencesPage: React.FC = () => {
   const { preferences, savePreferences, resetPreferences } = usePreferences();
@@ -124,7 +113,7 @@ export const PreferencesPage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {CITIES.map(c => {
+            {PREFERENCES_CITIES.map(c => {
               const isSelected = formData.location.city === c.city;
               return (
                 <button

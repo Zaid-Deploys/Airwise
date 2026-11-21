@@ -208,7 +208,9 @@ export function getAqiCategory(aqi: number): { category: AqiCategory; color: str
       return { category: cat.category, color: cat.color, description: cat.description };
     }
   }
-  return AQI_CATEGORIES[AQI_CATEGORIES.length - 1]!;
+  // AQI_CATEGORIES is a non-empty constant array, so the last element always exists.
+  const lastCategory = AQI_CATEGORIES[AQI_CATEGORIES.length - 1];
+  return { category: lastCategory.category, color: lastCategory.color, description: lastCategory.description };
 }
 
 /**

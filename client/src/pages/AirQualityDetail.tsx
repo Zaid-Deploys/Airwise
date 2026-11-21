@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { usePreferences } from '../store/preferences.js';
 import { api } from '../services/api.js';
 import type { AirQualityData } from '../types/index.js';
@@ -17,7 +17,7 @@ export const AirQualityDetailPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchAqi = async (isManual = false) => {
+  const fetchAqi = useCallback(async (isManual = false) => {
     if (!preferences) return;
     if (isManual) setRefreshing(true);
     else setLoading(true);
@@ -34,11 +34,11 @@ export const AirQualityDetailPage: React.FC = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [preferences]);
 
   useEffect(() => {
     fetchAqi();
-  }, [preferences?.location?.city]);
+  }, [fetchAqi]);
 
   if (!preferences) {
     return (

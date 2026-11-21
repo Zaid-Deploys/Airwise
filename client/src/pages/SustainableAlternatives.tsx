@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { usePreferences } from '../store/preferences.js';
 import { api } from '../services/api.js';
 import type { SustainableAlternative } from '../types/index.js';
@@ -14,7 +14,7 @@ export const SustainableAlternativesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchAlternatives = async () => {
+  const fetchAlternatives = useCallback(async () => {
     if (!preferences) return;
     setLoading(true);
     setError(null);
@@ -28,11 +28,11 @@ export const SustainableAlternativesPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [preferences]);
 
   useEffect(() => {
     fetchAlternatives();
-  }, [preferences?.location?.city]);
+  }, [fetchAlternatives]);
 
   if (!preferences) {
     return (

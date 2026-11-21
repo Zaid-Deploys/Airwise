@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { usePreferences } from '../store/preferences.js';
 import { api } from '../services/api.js';
@@ -38,7 +38,7 @@ export const Dashboard: React.FC = () => {
     }
   }, [hasOnboarded, navigate]);
 
-  const loadDashboardData = async (isManualRefresh = false) => {
+  const loadDashboardData = useCallback(async (isManualRefresh = false) => {
     if (!preferences) return;
 
     if (isManualRefresh) {
@@ -64,13 +64,13 @@ export const Dashboard: React.FC = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [preferences]);
 
   useEffect(() => {
     if (preferences) {
       loadDashboardData();
     }
-  }, [preferences?.location?.city]);
+  }, [loadDashboardData, preferences]);
 
   if (!preferences) {
     return null;

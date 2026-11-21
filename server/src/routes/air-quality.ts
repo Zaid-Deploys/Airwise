@@ -7,6 +7,7 @@ import { Router } from 'express';
 import { airQualityRequestSchema } from '../schemas/index.js';
 import { fetchAirQuality } from '../providers/open-meteo.js';
 import type { ApiResponse, AirQualityData } from '../types/index.js';
+import { sendValidationError, sendErrorResponse } from './utils.js';
 
 export const airQualityRouter = Router();
 
@@ -23,14 +24,7 @@ airQualityRouter.get('/', async (req, res) => {
     });
 
     if (!parsed.success) {
-      const response: ApiResponse<never> = {
-        success: false,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: parsed.error.issues.map(e => `${e.path.join('.')}: ${e.message}`).join('; '),
-        },
-      };
-      res.status(400).json(response);
+      sendValidationError(res, parsed.error);
       return;
     }
 
@@ -50,13 +44,6 @@ airQualityRouter.get('/', async (req, res) => {
     res.json(response);
   } catch (error) {
     console.error('[Air Quality Route Error]', error instanceof Error ? error.message : error);
-    const response: ApiResponse<never> = {
-      success: false,
-      error: {
-        code: 'PROVIDER_ERROR',
-        message: 'Unable to fetch air quality data. Please try again later.',
-      },
-    };
-    res.status(502).json(response);
+    sendErrorResponse(res, 502, 'PROVIDER_ERROR', 'Unable to fetch air quality data. Please try again later.');
   }
 });

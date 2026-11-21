@@ -9,6 +9,7 @@ import { fetchAirQuality } from '../providers/open-meteo.js';
 import { generateDailyPlan } from '../engine/recommendation-engine.js';
 import { generateAiPlan } from '../ai/client.js';
 import type { ApiResponse, DailyActionPlan } from '../types/index.js';
+import { sendValidationError, sendErrorResponse } from './utils.js';
 
 export const actionPlanRouter = Router();
 
@@ -17,14 +18,7 @@ actionPlanRouter.post('/', async (req, res) => {
     const parsed = actionPlanRequestSchema.safeParse(req.body);
 
     if (!parsed.success) {
-      const response: ApiResponse<never> = {
-        success: false,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: parsed.error.issues.map(e => `${e.path.join('.')}: ${e.message}`).join('; '),
-        },
-      };
-      res.status(400).json(response);
+      sendValidationError(res, parsed.error);
       return;
     }
 
@@ -59,13 +53,6 @@ actionPlanRouter.post('/', async (req, res) => {
     res.json(response);
   } catch (error) {
     console.error('[Action Plan Error]', error instanceof Error ? error.message : error);
-    const response: ApiResponse<never> = {
-      success: false,
-      error: {
-        code: 'PLAN_ERROR',
-        message: 'Unable to generate action plan. Please try again.',
-      },
-    };
-    res.status(500).json(response);
+    sendErrorResponse(res, 500, 'PLAN_ERROR', 'Unable to generate action plan. Please try again.');
   }
 });

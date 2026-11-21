@@ -1,5 +1,12 @@
 /**
  * AIRWISE Client — Core Type Definitions
+ *
+ * IMPORTANT: This file mirrors `server/src/types/index.ts`.
+ * Both files define the same domain types because the client and server
+ * are separate TypeScript compilation units with incompatible module
+ * resolution strategies (bundler vs. Node ESM). Any structural change
+ * to a shared type must be applied to both files to maintain contract
+ * consistency. The server version is authoritative.
  */
 
 export type AqiCategory = 'Good' | 'Satisfactory' | 'Moderate' | 'Poor' | 'Very Poor' | 'Severe';

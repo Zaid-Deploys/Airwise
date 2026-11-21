@@ -23,6 +23,32 @@ import type {
   Recommendation,
 } from '../types/index.js';
 
+/**
+ * Shared Gemini JSON schema for a single recommendation item.
+ * Extracted to avoid quadruple duplication across morning/afternoon/evening/night.
+ */
+const RECOMMENDATION_ITEM_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    action: { type: Type.STRING },
+    reason: { type: Type.STRING },
+    context: { type: Type.STRING },
+    expectedBenefit: { type: Type.STRING },
+    limitation: { type: Type.STRING },
+    source: { type: Type.STRING },
+    priority: { type: Type.STRING, enum: ['critical', 'high', 'medium', 'low'] },
+    category: { type: Type.STRING, enum: ['outdoor_activity', 'commute', 'ventilation', 'indoor_air', 'exercise', 'children', 'cooking', 'sustainable', 'general'] },
+    impactType: { type: Type.STRING, enum: ['exposure_reduction', 'emission_reduction', 'both', 'health_benefit'] },
+  },
+  required: ['action', 'reason', 'context', 'expectedBenefit', 'limitation', 'priority', 'category', 'impactType'],
+} as const;
+
+/** Schema for a time-of-day recommendation array */
+const RECOMMENDATION_ARRAY_SCHEMA = {
+  type: Type.ARRAY,
+  items: RECOMMENDATION_ITEM_SCHEMA,
+} as const;
+
 let aiInstance: GoogleGenAI | null = null;
 let mockAiInstance: GoogleGenAI | null = null;
 
@@ -146,78 +172,10 @@ export async function generateAiPlan(
           properties: {
             summary: { type: Type.STRING },
             keyMessage: { type: Type.STRING },
-            morning: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  action: { type: Type.STRING },
-                  reason: { type: Type.STRING },
-                  context: { type: Type.STRING },
-                  expectedBenefit: { type: Type.STRING },
-                  limitation: { type: Type.STRING },
-                  source: { type: Type.STRING },
-                  priority: { type: Type.STRING, enum: ['critical', 'high', 'medium', 'low'] },
-                  category: { type: Type.STRING, enum: ['outdoor_activity', 'commute', 'ventilation', 'indoor_air', 'exercise', 'children', 'cooking', 'sustainable', 'general'] },
-                  impactType: { type: Type.STRING, enum: ['exposure_reduction', 'emission_reduction', 'both', 'health_benefit'] },
-                },
-                required: ['action', 'reason', 'context', 'expectedBenefit', 'limitation', 'priority', 'category', 'impactType'],
-              },
-            },
-            afternoon: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  action: { type: Type.STRING },
-                  reason: { type: Type.STRING },
-                  context: { type: Type.STRING },
-                  expectedBenefit: { type: Type.STRING },
-                  limitation: { type: Type.STRING },
-                  source: { type: Type.STRING },
-                  priority: { type: Type.STRING, enum: ['critical', 'high', 'medium', 'low'] },
-                  category: { type: Type.STRING, enum: ['outdoor_activity', 'commute', 'ventilation', 'indoor_air', 'exercise', 'children', 'cooking', 'sustainable', 'general'] },
-                  impactType: { type: Type.STRING, enum: ['exposure_reduction', 'emission_reduction', 'both', 'health_benefit'] },
-                },
-                required: ['action', 'reason', 'context', 'expectedBenefit', 'limitation', 'priority', 'category', 'impactType'],
-              },
-            },
-            evening: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  action: { type: Type.STRING },
-                  reason: { type: Type.STRING },
-                  context: { type: Type.STRING },
-                  expectedBenefit: { type: Type.STRING },
-                  limitation: { type: Type.STRING },
-                  source: { type: Type.STRING },
-                  priority: { type: Type.STRING, enum: ['critical', 'high', 'medium', 'low'] },
-                  category: { type: Type.STRING, enum: ['outdoor_activity', 'commute', 'ventilation', 'indoor_air', 'exercise', 'children', 'cooking', 'sustainable', 'general'] },
-                  impactType: { type: Type.STRING, enum: ['exposure_reduction', 'emission_reduction', 'both', 'health_benefit'] },
-                },
-                required: ['action', 'reason', 'context', 'expectedBenefit', 'limitation', 'priority', 'category', 'impactType'],
-              },
-            },
-            night: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  action: { type: Type.STRING },
-                  reason: { type: Type.STRING },
-                  context: { type: Type.STRING },
-                  expectedBenefit: { type: Type.STRING },
-                  limitation: { type: Type.STRING },
-                  source: { type: Type.STRING },
-                  priority: { type: Type.STRING, enum: ['critical', 'high', 'medium', 'low'] },
-                  category: { type: Type.STRING, enum: ['outdoor_activity', 'commute', 'ventilation', 'indoor_air', 'exercise', 'children', 'cooking', 'sustainable', 'general'] },
-                  impactType: { type: Type.STRING, enum: ['exposure_reduction', 'emission_reduction', 'both', 'health_benefit'] },
-                },
-                required: ['action', 'reason', 'context', 'expectedBenefit', 'limitation', 'priority', 'category', 'impactType'],
-              },
-            },
+            morning: RECOMMENDATION_ARRAY_SCHEMA,
+            afternoon: RECOMMENDATION_ARRAY_SCHEMA,
+            evening: RECOMMENDATION_ARRAY_SCHEMA,
+            night: RECOMMENDATION_ARRAY_SCHEMA,
           },
           required: ['summary', 'keyMessage', 'morning', 'afternoon', 'evening', 'night'],
         },
@@ -230,12 +188,12 @@ export async function generateAiPlan(
       throw new Error('Empty response from Gemini');
     }
 
-    const parsed = JSON.parse(response.text);
+    const parsed = JSON.parse(response.text) as Record<string, unknown>;
 
-    // Map into complete DailyActionPlan ensuring IDs are preserved
-    const mapItems = (items: any[], time: 'morning' | 'afternoon' | 'evening' | 'night'): Recommendation[] => {
+    // Map Gemini response items into typed Recommendation objects
+    const mapItems = (items: unknown, time: 'morning' | 'afternoon' | 'evening' | 'night'): Recommendation[] => {
       if (!Array.isArray(items)) return [];
-      return items.map((item, idx) => ({
+      return items.map((item: Record<string, unknown>, idx: number) => ({
         id: `ai-${time}-${idx}-${Date.now().toString(36)}`,
         action: String(item.action || ''),
         reason: String(item.reason || ''),
@@ -243,10 +201,10 @@ export async function generateAiPlan(
         expectedBenefit: String(item.expectedBenefit || ''),
         limitation: String(item.limitation || ''),
         source: item.source ? String(item.source) : 'CPCB & WHO Environmental Health Guidelines',
-        priority: (item.priority as any) || 'medium',
-        category: (item.category as any) || 'general',
+        priority: (item.priority as Recommendation['priority']) || 'medium',
+        category: (item.category as Recommendation['category']) || 'general',
         timeOfDay: time,
-        impactType: (item.impactType as any) || 'exposure_reduction',
+        impactType: (item.impactType as Recommendation['impactType']) || 'exposure_reduction',
         isCompleted: false,
       }));
     };
@@ -263,8 +221,8 @@ export async function generateAiPlan(
       afternoon: mapItems(parsed.afternoon, 'afternoon'),
       evening: mapItems(parsed.evening, 'evening'),
       night: mapItems(parsed.night, 'night'),
-      summary: parsed.summary || basePlan.summary,
-      keyMessage: parsed.keyMessage || basePlan.keyMessage,
+      summary: (parsed.summary as string) || basePlan.summary,
+      keyMessage: (parsed.keyMessage as string) || basePlan.keyMessage,
     };
   } catch (error) {
     console.warn('[Gemini AI Plan] Failed, returning deterministic base plan:', error instanceof Error ? error.message : error);
